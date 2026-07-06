@@ -1,0 +1,15 @@
+*.log
+uploads/*
+!uploads/.gitkeep
+.env
+.env.*
+*.sqlite
+.DS_Store
+node_modules/
+vendor/
+tmp/
+cache/
+*.bak
+*.swp
+.idea/
+.vscode/
