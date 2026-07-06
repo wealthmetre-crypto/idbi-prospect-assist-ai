@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prospect Assist AI — IDBI Innovate 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #0f1728; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; }
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        .header p { opacity: 0.9; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 8px; }
+        .card-value { font-size: 28px; font-weight: 700; color: #0f1728; }
+        .card-detail { font-size: 12px; color: #64748b; margin-top: 8px; }
+        .prospect-table { background: white; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .table-header { display: grid; grid-template-columns: 80px 150px 130px 100px 100px 120px 100px 100px; padding: 12px 15px; background: #f1f5f9; font-weight: 600; font-size: 13px; border-bottom: 1px solid #e2e8f0; }
+        .table-row { display: grid; grid-template-columns: 80px 150px 130px 100px 100px 120px 100px 100px; padding: 14px 15px; border-bottom: 1px solid #f1f5f9; align-items: center; cursor: pointer; }
+        .table-row:hover { background: #f8fafc; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .badge.proceed { background: #dcfce7; color: #166534; }
+        .badge.rework { background: #fef3c7; color: #92400e; }
+        .badge.nurture { background: #dbeafe; color: #1e40af; }
+        .badge.reject { background: #fee2e2; color: #991b1b; }
+        .btn { display: inline-block; padding: 9px 16px; background: #1e3a8a; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; }
+        .btn:hover { background: #1e40af; }
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 12px; padding: 28px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
+        .modal-close { float: right; font-size: 24px; cursor: pointer; color: #64748b; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #0f1728; }
+        .input-group input, .input-group select { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; }
+        .agent-status { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 20px 0; }
+        .agent-card { padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; }
+        .agent-name { font-size: 12px; font-weight: 600; color: #0f1728; }
+        .agent-state { font-size: 11px; color: #64748b; margin-top: 4px; }
+        .rec-banner { padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+        .rec-proceed { background: #dcfce7; border-left: 4px solid #16a34a; color: #166534; }
+        .rec-rework { background: #fef3c7; border-left: 4px solid #eab308; color: #92400e; }
+        .rec-reject { background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Prospect Assist AI</h1>
+            <p>Agentic Loan Readiness Engine — IDBI Innovate 2026</p>
+        </div>
+
+        <div class="grid">
+            <div class="card"><div class="card-title">Total Prospects</div><div class="card-value" id="totalProspects">-</div></div>
+            <div class="card"><div class="card-title">Proceed to Login</div><div class="card-value" id="proceedCount">-</div></div>
+            <div class="card"><div class="card-title">Proceed with Rework</div><div class="card-value" id="reworkCount">-</div></div>
+            <div class="card"><div class="card-title">Avg Quality Score</div><div class="card-value" id="avgScore">-</div></div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <button class="btn" onclick="showAddProspect()">+ Add Prospect</button>
+            <input type="text" id="searchBox" placeholder="Search by name/mobile/code..." style="width: 300px; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 6px; margin-left: 10px;">
+        </div>
+
+        <div class="prospect-table">
+            <div class="table-header">
+                <div>Code</div>
+                <div>Name</div>
+                <div>Mobile</div>
+                <div>Loan Type</div>
+                <div>Amount</div>
+                <div>Recommendation</div>
+                <div>Score</div>
+                <div>Action</div>
+            </div>
+            <div id="prospectList"></div>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">×</span>
+            <h2>Add New Prospect</h2>
+            <div class="input-group"><label>Full Name *</label><input type="text" id="fullName" placeholder="Rahul Sharma"></div>
+            <div class="input-group"><label>Mobile *</label><input type="text" id="mobile" placeholder="9876543210"></div>
+            <div class="input-group"><label>Email</label><input type="email" id="email"></div>
+            <div class="input-group"><label>City</label><input type="text" id="city" placeholder="Jaipur"></div>
+            <div class="input-group"><label>Loan Type *</label><select id="loanType"><option>personal_loan</option><option>home_loan</option><option>mortgage_loan</option><option>auto_loan</option></select></div>
+            <div class="input-group"><label>Loan Amount</label><input type="number" id="loanAmount" placeholder="5000000"></div>
+            <div class="input-group"><label>Employment Type</label><select id="employment"><option>salaried</option><option>self_employed</option><option>business_owner</option></select></div>
+            <div class="input-group"><label>Monthly Income</label><input type="number" id="income" placeholder="120000"></div>
+            <div class="input-group"><label>Existing EMI</label><input type="number" id="emi" placeholder="20000"></div>
+            <div class="input-group"><label>CIBIL Score</label><input type="number" id="cibil" placeholder="750"></div>
+            <div class="input-group"><label><input type="checkbox" id="consent"> I consent to data processing</label></div>
+            <button class="btn" onclick="createProspect()" style="width: 100%;">Create Prospect</button>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeDetailModal()">×</span>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function loadProspects() {
+            fetch('/api/prospect_intake.php?action=list')
+                .then(r => r.json())
+                .then(d => {
+                    if (!d.success) return;
+                    document.getElementById('totalProspects').innerText = d.stats.total;
+                    document.getElementById('proceedCount').innerText = d.stats.proceed_to_login;
+                    document.getElementById('reworkCount').innerText = d.stats.proceed_with_rework;
+                    
+                    const scores = d.prospects.map(p => p.prospect_quality_score || 0).filter(s => s > 0);
+                    const avg = scores.length > 0 ? Math.round(scores.reduce((a,b) => a+b) / scores.length) : '-';
+                    document.getElementById('avgScore').innerText = avg;
+
+                    const html = d.prospects.map(p => `
+                        <div class="table-row" onclick="viewDetail(${p.id})">
+                            <div style="color: #0f1728; font-weight: 600;">${p.prospect_code}</div>
+                            <div>${p.full_name}</div>
+                            <div>${p.mobile}</div>
+                            <div>${p.loan_type.replace('_', ' ')}</div>
+                            <div>₹${(p.loan_amount_required/100000).toFixed(0)}L</div>
+                            <div><span class="badge ${p.final_recommendation ? ('badge-' + p.final_recommendation.split('_')[0]) : ''}">${p.final_recommendation ? p.final_recommendation.replace(/_/g, ' ').replace('proceed to login', 'Login Ready').replace('proceed with rework', 'Rework').replace('offer alternate product', 'Alternate').replace('do not proceed', 'Declined').replace('nurture', 'Nurture') : 'Pending'}</span></div>
+                            <div>${p.prospect_quality_score || '-'}</div>
+                            <div><a href="#" onclick="event.preventDefault(); runAssessment(${p.id});" class="btn btn-secondary" style="padding: 6px 10px; font-size: 11px;">Assess</a></div>
+                        </div>
+                    `).join('');
+                    document.getElementById('prospectList').innerHTML = html;
+                });
+        }
+
+        function showAddProspect() { document.getElementById('addModal').classList.add('active'); }
+        function closeModal() { document.getElementById('addModal').classList.remove('active'); }
+        function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); }
+
+        function createProspect() {
+            const data = {
+                full_name: document.getElementById('fullName').value,
+                mobile: document.getElementById('mobile').value,
+                email: document.getElementById('email').value,
+                city: document.getElementById('city').value,
+                loan_type: document.getElementById('loanType').value,
+                loan_amount_required: parseFloat(document.getElementById('loanAmount').value || 0),
+                employment_type: document.getElementById('employment').value,
+                declared_monthly_income: parseFloat(document.getElementById('income').value || 0),
+                existing_emi_declared: parseFloat(document.getElementById('emi').value || 0),
+                cibil_declared: parseInt(document.getElementById('cibil').value || 700),
+                consent: document.getElementById('consent').checked
+            };
+            fetch('/api/prospect_intake.php?action=create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => {
+                if (d.success) {
+                    alert('Prospect ' + d.prospect_code + ' created!');
+                    closeModal();
+                    loadProspects();
+                } else alert('Error: ' + d.message);
+            });
+        }
+
+        async function runAssessment(id) {
+            const btns = document.querySelectorAll('.btn-secondary');
+            btns.forEach(b => b.style.opacity = '0.5');
+            try {
+                // Sequential agentic pipeline: each agent feeds the next
+                const bureau = await fetch('/api/agents.php?action=run_bureau&prospect_id=' + id).then(r => r.json());
+                const income = await fetch('/api/agents.php?action=run_income&prospect_id=' + id).then(r => r.json());
+                const cibil = bureau.cibil_score || 700;
+                const verInc = income.verified_income || 50000;
+                const txn = await fetch('/api/agents.php?action=run_transaction&prospect_id=' + id + '&verified_income=' + verInc).then(r => r.json());
+                const foir = txn.foir || 40;
+                const safeEmi = txn.safe_emi || 20000;
+                await fetch('/api/agents.php?action=run_policy_fit&prospect_id=' + id + '&cibil_score=' + cibil + '&verified_income=' + verInc + '&foir=' + foir + '&safe_emi=' + safeEmi).then(r => r.json());
+                await fetch('/api/similar_cases.php?prospect_id=' + id).then(r => r.json());
+                const d = await fetch('/api/recommendation_engine.php?prospect_id=' + id).then(r => r.json());
+                loadProspects();
+                viewDetail(id);
+            } catch (e) {
+                alert('Assessment failed: ' + e.message);
+            } finally {
+                btns.forEach(b => b.style.opacity = '1');
+            }
+        }
+
+        function viewDetail(id) {
+            fetch('/api/prospect_intake.php?action=get&id=' + id)
+                .then(r => r.json())
+                .then(d => {
+                    const rec = d.recommendation || {};
+                    const recClass = rec.final_recommendation ? 'rec-' + rec.final_recommendation.split('_')[0] : '';
+                    const html = `
+                        <h2>${d.prospect.prospect_code} — ${d.prospect.full_name}</h2>
+                        ${rec.final_recommendation ? `
+                            <div class="rec-banner ${recClass}">
+                                <strong>Recommendation:</strong> ${rec.final_recommendation.replace(/_/g, ' ').toUpperCase()}
+                                <br><strong>Quality Score:</strong> ${rec.prospect_quality_score}/100 | <strong>Conversion:</strong> ${rec.conversion_probability}
+                                <br><strong>Max Eligible:</strong> ₹${(rec.max_eligible_loan_amount/100000).toFixed(0)}L | <strong>FOIR:</strong> ${rec.foir}% | <strong>Safe EMI:</strong> ₹${rec.safe_emi_capacity}
+                            </div>
+                        ` : ''}
+                        <p><strong>Mobile:</strong> ${d.prospect.mobile} | <strong>City:</strong> ${d.prospect.city || '-'}</p>
+                        <p><strong>Loan:</strong> ${d.prospect.loan_type} | <strong>Amount Requested:</strong> ₹${(d.prospect.loan_amount_required/100000).toFixed(0)}L</p>
+                        <p><strong>Income:</strong> ₹${d.prospect.declared_monthly_income} | <strong>CIBIL:</strong> ${d.prospect.cibil_declared}</p>
+                        <h4 style="margin-top: 20px;">Agent Runs:</h4>
+                        <div class="agent-status">
+                            ${Object.values(d.agent_runs.reduce((m, a) => { m[a.agent_name] = a; return m; }, {})).map(a => `<div class="agent-card"><div class="agent-name">${a.agent_name}</div><div class="agent-state">${a.status}</div></div>`).join('')}
+                        </div>
+                        ${rec.rm_script ? `<p style="margin-top: 20px; padding: 12px; background: #f1f5f9; border-radius: 6px;"><strong>RM Script:</strong> ${rec.rm_script}</p>` : ''}
+                        ${rec.customer_message ? `<p style="padding: 12px; background: #dcfce7; border-radius: 6px;"><strong>Customer Message:</strong> ${rec.customer_message}</p>` : ''}
+                    `;
+                    document.getElementById('detailContent').innerHTML = html;
+                    document.getElementById('detailModal').classList.add('active');
+                });
+        }
+
+        loadProspects();
+        setInterval(loadProspects, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prospect Assist AI — IDBI Innovate 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #0f1728; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; padding: 30px; border-radius: 12px; margin-bottom: 30px; }
+        .header h1 { font-size: 28px; margin-bottom: 8px; }
+        .header p { opacity: 0.9; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .card { background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .card-title { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #64748b; margin-bottom: 8px; }
+        .card-value { font-size: 28px; font-weight: 700; color: #0f1728; }
+        .card-detail { font-size: 12px; color: #64748b; margin-top: 8px; }
+        .prospect-table { background: white; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .table-header { display: grid; grid-template-columns: 80px 150px 130px 100px 100px 120px 100px 100px; padding: 12px 15px; background: #f1f5f9; font-weight: 600; font-size: 13px; border-bottom: 1px solid #e2e8f0; }
+        .table-row { display: grid; grid-template-columns: 80px 150px 130px 100px 100px 120px 100px 100px; padding: 14px 15px; border-bottom: 1px solid #f1f5f9; align-items: center; cursor: pointer; }
+        .table-row:hover { background: #f8fafc; }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .badge.proceed { background: #dcfce7; color: #166534; }
+        .badge.rework { background: #fef3c7; color: #92400e; }
+        .badge.nurture { background: #dbeafe; color: #1e40af; }
+        .badge.reject { background: #fee2e2; color: #991b1b; }
+        .btn { display: inline-block; padding: 9px 16px; background: #1e3a8a; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; }
+        .btn:hover { background: #1e40af; }
+        .btn-secondary { background: #64748b; }
+        .btn-secondary:hover { background: #475569; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 12px; padding: 28px; width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto; }
+        .modal-close { float: right; font-size: 24px; cursor: pointer; color: #64748b; }
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #0f1728; }
+        .input-group input, .input-group select { width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; }
+        .agent-status { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 20px 0; }
+        .agent-card { padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: white; }
+        .agent-name { font-size: 12px; font-weight: 600; color: #0f1728; }
+        .agent-state { font-size: 11px; color: #64748b; margin-top: 4px; }
+        .rec-banner { padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+        .rec-proceed { background: #dcfce7; border-left: 4px solid #16a34a; color: #166534; }
+        .rec-rework { background: #fef3c7; border-left: 4px solid #eab308; color: #92400e; }
+        .rec-reject { background: #fee2e2; border-left: 4px solid #ef4444; color: #991b1b; }
+        .wz-tile { border: 2px solid #e2e8f0; border-radius: 10px; padding: 16px; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .wz-tile:hover { border-color: #1e3a8a; }
+        .wz-tile.selected { border-color: #1e3a8a; background: #eff6ff; }
+        .wz-tile .wz-t { font-weight: 700; font-size: 14px; color: #0f1728; }
+        .wz-tile .wz-s { font-size: 11px; color: #64748b; margin-top: 4px; }
+        .wz-progress { display: flex; gap: 6px; margin-bottom: 18px; }
+        .wz-dot { flex: 1; height: 5px; border-radius: 3px; background: #e2e8f0; }
+        .wz-dot.done { background: #1e3a8a; }
+        .wz-card { padding: 14px; border-radius: 8px; margin: 14px 0; font-size: 13px; line-height: 1.6; }
+        .wz-green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+        .wz-amber { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+        .wz-red { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+        .wz-nav { display: flex; justify-content: space-between; margin-top: 18px; }
+        .tl-step { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; background: white; transition: all 0.3s; }
+        .tl-step.running { border-color: #1e3a8a; background: #eff6ff; }
+        .tl-step.completed { border-color: #bbf7d0; background: #f0fdf4; }
+        .tl-icon { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; background: #f1f5f9; color: #94a3b8; flex-shrink: 0; }
+        .tl-step.running .tl-icon { background: #1e3a8a; color: white; animation: pulse 1s infinite; }
+        .tl-step.completed .tl-icon { background: #16a34a; color: white; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .tl-name { font-weight: 700; font-size: 13px; color: #0f1728; }
+        .tl-desc { font-size: 12px; color: #64748b; }
+        .tl-result { margin-left: auto; font-size: 12px; font-weight: 600; color: #16a34a; text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Prospect Assist AI</h1>
+            <p>Agentic Loan Readiness Engine — IDBI Innovate 2026</p>
+        </div>
+
+        <div class="grid">
+            <div class="card"><div class="card-title">Total Prospects</div><div class="card-value" id="totalProspects">-</div></div>
+            <div class="card"><div class="card-title">Proceed to Login</div><div class="card-value" id="proceedCount">-</div></div>
+            <div class="card"><div class="card-title">Proceed with Rework</div><div class="card-value" id="reworkCount">-</div></div>
+            <div class="card"><div class="card-title">Avg Quality Score</div><div class="card-value" id="avgScore">-</div></div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <button class="btn" onclick="showAddProspect()">+ Add Prospect</button>
+            <input type="text" id="searchBox" placeholder="Search by name/mobile/code..." style="width: 300px; padding: 9px 12px; border: 1px solid #e2e8f0; border-radius: 6px; margin-left: 10px;">
+        </div>
+
+        <div class="prospect-table">
+            <div class="table-header">
+                <div>Code</div>
+                <div>Name</div>
+                <div>Mobile</div>
+                <div>Loan Type</div>
+                <div>Amount</div>
+                <div>Recommendation</div>
+                <div>Score</div>
+                <div>Action</div>
+            </div>
+            <div id="prospectList"></div>
+        </div>
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">×</span>
+            <h2>Add New Prospect</h2>
+            <div class="input-group"><label>Full Name *</label><input type="text" id="fullName" placeholder="Rahul Sharma"></div>
+            <div class="input-group"><label>Mobile *</label><input type="text" id="mobile" placeholder="9876543210"></div>
+            <div class="input-group"><label>Email</label><input type="email" id="email"></div>
+            <div class="input-group"><label>City</label><input type="text" id="city" placeholder="Jaipur"></div>
+            <div class="input-group"><label>Loan Type *</label><select id="loanType"><option>personal_loan</option><option>home_loan</option><option>mortgage_loan</option><option>auto_loan</option></select></div>
+            <div class="input-group"><label>Loan Amount</label><input type="number" id="loanAmount" placeholder="5000000"></div>
+            <div class="input-group"><label>Employment Type</label><select id="employment"><option>salaried</option><option>self_employed</option><option>business_owner</option></select></div>
+            <div class="input-group"><label>Monthly Income</label><input type="number" id="income" placeholder="120000"></div>
+            <div class="input-group"><label>Existing EMI</label><input type="number" id="emi" placeholder="20000"></div>
+            <div class="input-group"><label>CIBIL Score</label><input type="number" id="cibil" placeholder="750"></div>
+            <div class="input-group"><label><input type="checkbox" id="consent"> I consent to data processing</label></div>
+            <button class="btn" onclick="createProspect()" style="width: 100%;">Create Prospect</button>
+        </div>
+    </div>
+
+    <div id="wizardModal" class="modal">
+        <div class="modal-content" style="max-width: 620px;">
+            <span class="modal-close" onclick="document.getElementById('wizardModal').classList.remove('active')">×</span>
+            <h2 style="margin-bottom: 4px;">On-the-Spot Qualification</h2>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 14px;" id="wzStepLabel"></p>
+            <div class="wz-progress" id="wzProgress"></div>
+            <div id="wzBody"></div>
+            <div class="wz-nav">
+                <button class="btn btn-secondary" id="wzBack" onclick="wzPrev()">Back</button>
+                <button class="btn" id="wzNext" onclick="wzNext()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="propertyModal" class="modal">
+        <div class="modal-content" style="max-width: 520px;">
+            <span class="modal-close" onclick="document.getElementById('propertyModal').classList.remove('active')">×</span>
+            <h2 style="margin-bottom: 6px;">Property Details (Secured Loan)</h2>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 18px;">RM inputs for Legal & Valuation agents. Valuation is cross-verified against the bank's 12-month funding history.</p>
+            <input type="hidden" id="pm_prospect_id">
+            <div class="input-group"><label>Property Area / Locality *</label><input type="text" id="pm_area" placeholder="e.g. Vaishali Nagar"></div>
+            <div class="input-group"><label>Carpet Area (sqft) *</label><input type="number" id="pm_sqft" placeholder="1000"></div>
+            <div class="input-group"><label>RM Estimated Value (Rs.) *</label><input type="number" id="pm_value" placeholder="10000000"></div>
+            <div class="input-group"><label>Documents Received (Legal Agent checklist)</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 13px; margin-top: 6px;">
+                    <label><input type="checkbox" class="pm-doc" value="sale_deed"> Sale Deed</label>
+                    <label><input type="checkbox" class="pm-doc" value="previous_sale_deed"> Previous Chain</label>
+                    <label><input type="checkbox" class="pm-doc" value="patta"> Patta / Allotment</label>
+                    <label><input type="checkbox" class="pm-doc" value="mutation"> Mutation</label>
+                    <label><input type="checkbox" class="pm-doc" value="approved_map"> Approved Map</label>
+                    <label><input type="checkbox" class="pm-doc" value="property_tax_receipt"> Tax Receipt</label>
+                </div>
+            </div>
+            <button class="btn" onclick="startSecuredAssessment()" style="width: 100%;">Start Agentic Assessment</button>
+        </div>
+    </div>
+
+    <div id="timelineModal" class="modal">
+        <div class="modal-content" style="max-width: 560px;">
+            <h2 style="margin-bottom: 6px;">Running Agentic Assessment</h2>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 20px;" id="timelineSubtitle">Each agent feeds its output to the next agent in the pipeline.</p>
+            <div id="timelineSteps"></div>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeDetailModal()">×</span>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function loadProspects() {
+            fetch('/api/prospect_intake.php?action=list')
+                .then(r => r.json())
+                .then(d => {
+                    if (!d.success) return;
+                    document.getElementById('totalProspects').innerText = d.stats.total;
+                    document.getElementById('proceedCount').innerText = d.stats.proceed_to_login;
+                    document.getElementById('reworkCount').innerText = d.stats.proceed_with_rework;
+                    
+                    const scores = d.prospects.map(p => p.prospect_quality_score || 0).filter(s => s > 0);
+                    const avg = scores.length > 0 ? Math.round(scores.reduce((a,b) => a+b) / scores.length) : '-';
+                    document.getElementById('avgScore').innerText = avg;
+
+                    const html = d.prospects.map(p => `
+                        <div class="table-row" onclick="viewDetail(${p.id})">
+                            <div style="color: #0f1728; font-weight: 600;">${p.prospect_code}</div>
+                            <div>${p.full_name}</div>
+                            <div>${p.mobile}</div>
+                            <div>${p.loan_type.replace('_', ' ')}</div>
+                            <div>₹${(p.loan_amount_required/100000).toFixed(0)}L</div>
+                            <div><span class="badge ${p.final_recommendation ? ('badge-' + p.final_recommendation.split('_')[0]) : ''}">${p.final_recommendation ? p.final_recommendation.replace(/_/g, ' ').replace('proceed to login', 'Login Ready').replace('proceed with rework', 'Rework').replace('offer alternate product', 'Alternate').replace('do not proceed', 'Declined').replace('nurture', 'Nurture') : 'Pending'}</span></div>
+                            <div>${p.prospect_quality_score || '-'}</div>
+                            <div><a href="#" onclick="event.preventDefault(); event.stopPropagation(); runAssessment(${p.id}, '${p.loan_type}');" class="btn btn-secondary" style="padding: 6px 10px; font-size: 11px;">Assess</a></div>
+                        </div>
+                    `).join('');
+                    document.getElementById('prospectList').innerHTML = html;
+                });
+        }
+
+        function showAddProspect() { wzOpen(); }
+        function closeModal() { document.getElementById('addModal').classList.remove('active'); }
+        function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); }
+
+        function createProspect() {
+            const data = {
+                full_name: document.getElementById('fullName').value,
+                mobile: document.getElementById('mobile').value,
+                email: document.getElementById('email').value,
+                city: document.getElementById('city').value,
+                loan_type: document.getElementById('loanType').value,
+                loan_amount_required: parseFloat(document.getElementById('loanAmount').value || 0),
+                employment_type: document.getElementById('employment').value,
+                declared_monthly_income: parseFloat(document.getElementById('income').value || 0),
+                existing_emi_declared: parseFloat(document.getElementById('emi').value || 0),
+                cibil_declared: parseInt(document.getElementById('cibil').value || 700),
+                consent: document.getElementById('consent').checked
+            };
+            fetch('/api/prospect_intake.php?action=create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => {
+                if (d.success) {
+                    alert('Prospect ' + d.prospect_code + ' created!');
+                    closeModal();
+                    loadProspects();
+                } else alert('Error: ' + d.message);
+            });
+        }
+
+        const AGENT_STEPS = [
+            { key: 'bureau',      icon: '1', name: 'Bureau Agent',          desc: 'Fetching credit report & CIBIL score' },
+            { key: 'income',      icon: '2', name: 'Income Agent',          desc: 'Verifying declared vs actual income' },
+            { key: 'transaction', icon: '3', name: 'Transaction Agent',     desc: 'Analyzing cashflow, FOIR & safe EMI' },
+            { key: 'legal',       icon: '4', name: 'Legal Agent',           desc: 'Title chain & document checklist scrutiny' },
+            { key: 'valuation',   icon: '5', name: 'Valuation Agent',       desc: 'Cross-verifying RM value vs funding history' },
+            { key: 'policy_fit',  icon: '6', name: 'Policy Fit Agent',      desc: 'Matching against IDBI product programs' },
+            { key: 'similar',     icon: '7', name: 'Similar Case Memory',   desc: 'Comparing with historical decisions' },
+            { key: 'recommend',   icon: '8', name: 'Recommendation Agent',  desc: 'AI generating explainable decision' }
+        ];
+
+        function renderTimeline() {
+            const steps = AGENT_STEPS.map(s => (s.key === 'income' && wz.isBusiness)
+                ? { ...s, name: 'Business Financial Agent', desc: 'Nayak limit, DSCR & operating cycle' } : s);
+            document.getElementById('timelineSteps').innerHTML = steps.map(s => `
+                <div class="tl-step" id="tl_${s.key}">
+                    <div class="tl-icon">${s.icon}</div>
+                    <div><div class="tl-name">${s.name}</div><div class="tl-desc">${s.desc}</div></div>
+                    <div class="tl-result" id="tlr_${s.key}"></div>
+                </div>`).join('');
+        }
+
+        function setStep(key, state, result = '') {
+            const el = document.getElementById('tl_' + key);
+            el.className = 'tl-step ' + state;
+            if (state === 'completed') el.querySelector('.tl-icon').innerText = '✓';
+            document.getElementById('tlr_' + key).innerText = result;
+        }
+
+        function runAssessment(id, loanType) {
+            wz.isBusiness = false;
+            if (['home_loan', 'mortgage_loan'].includes(loanType)) {
+                document.getElementById('pm_prospect_id').value = id;
+                document.getElementById('propertyModal').classList.add('active');
+            } else {
+                executePipeline(id, null);
+            }
+        }
+
+        function startSecuredAssessment() {
+            const id = parseInt(document.getElementById('pm_prospect_id').value);
+            const prop = {
+                area: document.getElementById('pm_area').value.trim(),
+                sqft: document.getElementById('pm_sqft').value,
+                rm_value: document.getElementById('pm_value').value,
+                docs: Array.from(document.querySelectorAll('.pm-doc:checked')).map(c => c.value).join(',')
+            };
+            if (!prop.area || !prop.sqft || !prop.rm_value) { alert('Area, carpet size and RM estimated value are required'); return; }
+            document.getElementById('propertyModal').classList.remove('active');
+            executePipeline(id, prop);
+        }
+
+        async function executePipeline(id, prop, fromWizard) {
+            renderTimeline();
+            document.getElementById('timelineModal').classList.add('active');
+            const pause = ms => new Promise(r => setTimeout(r, ms));
+            try {
+                setStep('bureau', 'running');
+                const bureau = await fetch('/api/agents.php?action=run_bureau&prospect_id=' + id).then(r => r.json());
+                setStep('bureau', 'completed', 'CIBIL ' + bureau.cibil_score);
+                await pause(400);
+
+                setStep('income', 'running');
+                let income;
+                if (fromWizard && wz.isBusiness) {
+                    const bd = await fetch('/api/prospect_intake.php?action=get&id=' + id).then(r => r.json());
+                    const bruns = bd.agent_runs.filter(a => a.agent_name === 'business_financials');
+                    const bo = bruns.length ? JSON.parse(bruns[bruns.length-1].output_json) : null;
+                    income = { verified_income: bo ? bo.monthly_income_equivalent : 50000 };
+                    setStep('income', 'completed', bo ? ('DSCR ' + bo.dscr) : 'N/A');
+                } else {
+                    income = await fetch('/api/agents.php?action=run_income&prospect_id=' + id).then(r => r.json());
+                    setStep('income', 'completed', 'Rs.' + (income.verified_income || 0).toLocaleString('en-IN') + '/mo');
+                }
+                await pause(400);
+
+                setStep('transaction', 'running');
+                const txn = await fetch('/api/agents.php?action=run_transaction&prospect_id=' + id + '&verified_income=' + (income.verified_income || 50000)).then(r => r.json());
+                setStep('transaction', 'completed', 'FOIR ' + txn.foir + '%');
+                await pause(400);
+
+                setStep('legal', 'running');
+                const legal = fromWizard
+                    ? await fetch('/api/prospect_intake.php?action=get&id=' + id).then(r => r.json()).then(d => { const runs = d.agent_runs.filter(a => a.agent_name === 'legal'); const last = runs[runs.length-1]; return { output: last ? JSON.parse(last.output_json) : { applicable: false } }; })
+                    : await fetch('/api/legal_valuation.php?action=run_legal&prospect_id=' + id + '&received_docs=' + encodeURIComponent(prop ? prop.docs : '')).then(r => r.json());
+                setStep('legal', 'completed', legal.output.applicable ? (legal.output.legal_readiness_score + '/100') : 'N/A');
+                await pause(400);
+
+                setStep('valuation', 'running');
+                let valResult = 'N/A';
+                if (fromWizard) {
+                    const vd = await fetch('/api/prospect_intake.php?action=get&id=' + id).then(r => r.json());
+                    const vruns = vd.agent_runs.filter(a => a.agent_name === 'valuation');
+                    if (vruns.length) valResult = (JSON.parse(vruns[vruns.length-1].output_json).signal || 'N/A').replace('_',' ').toUpperCase();
+                } else if (prop) {
+                    const val = await fetch('/api/legal_valuation.php?action=run_valuation&prospect_id=' + id + '&rm_value=' + prop.rm_value + '&area=' + encodeURIComponent(prop.area) + '&sqft=' + prop.sqft).then(r => r.json());
+                    valResult = (val.output.signal || 'N/A').replace('_', ' ').toUpperCase();
+                } else {
+                    await fetch('/api/legal_valuation.php?action=run_valuation&prospect_id=' + id + '&rm_value=1&area=na&sqft=1').then(r => r.json()).catch(() => {});
+                }
+                setStep('valuation', 'completed', valResult);
+                await pause(400);
+
+                setStep('policy_fit', 'running');
+                const pf = await fetch('/api/agents.php?action=run_policy_fit&prospect_id=' + id + '&cibil_score=' + (bureau.cibil_score || 700) + '&verified_income=' + (income.verified_income || 50000) + '&foir=' + (txn.foir || 40) + '&safe_emi=' + (txn.safe_emi || 20000)).then(r => r.json());
+                setStep('policy_fit', 'completed', (pf.output && pf.output.best_program) ? 'Matched' : 'Routing');
+                await pause(400);
+
+                setStep('similar', 'running');
+                const sim = await fetch('/api/similar_cases.php?prospect_id=' + id).then(r => r.json());
+                setStep('similar', 'completed', (sim.output ? sim.output.similar_cases_found : 0) + ' cases');
+                await pause(400);
+
+                setStep('recommend', 'running');
+                const d = await fetch('/api/recommendation_engine.php?prospect_id=' + id).then(r => r.json());
+                setStep('recommend', 'completed', d.recommendation.prospect_quality_score + '/100');
+                await pause(700);
+
+                document.getElementById('timelineModal').classList.remove('active');
+                loadProspects();
+                viewDetail(id);
+            } catch (e) {
+                document.getElementById('timelineModal').classList.remove('active');
+                alert('Assessment failed: ' + e.message);
+            }
+        }
+
+        function viewDetail(id) {
+            fetch('/api/prospect_intake.php?action=get&id=' + id)
+                .then(r => r.json())
+                .then(d => {
+                    const rec = d.recommendation || {};
+                    const recClass = rec.final_recommendation ? 'rec-' + rec.final_recommendation.split('_')[0] : '';
+                    const html = `
+                        <h2>${d.prospect.prospect_code} — ${d.prospect.full_name}
+                            <a href="/report.php?prospect_id=${d.prospect.id}" target="_blank" class="btn" style="float:right;font-size:12px;padding:7px 14px;margin-right:30px;">📄 View CAM Report</a></h2>
+                        ${rec.final_recommendation ? `
+                            <div class="rec-banner ${recClass}">
+                                <strong>Recommendation:</strong> ${rec.final_recommendation.replace(/_/g, ' ').toUpperCase()}
+                                <br><strong>Quality Score:</strong> ${rec.prospect_quality_score}/100 | <strong>Conversion:</strong> ${rec.conversion_probability}
+                                <br><strong>Max Eligible:</strong> ₹${(rec.max_eligible_loan_amount/100000).toFixed(0)}L | <strong>FOIR:</strong> ${rec.foir}% | <strong>Safe EMI:</strong> ₹${rec.safe_emi_capacity}
+                            </div>
+                        ` : ''}
+                        <p><strong>Mobile:</strong> ${d.prospect.mobile} | <strong>City:</strong> ${d.prospect.city || '-'}</p>
+                        <p><strong>Loan:</strong> ${d.prospect.loan_type} | <strong>Amount Requested:</strong> ₹${(d.prospect.loan_amount_required/100000).toFixed(0)}L</p>
+                        <p><strong>Income:</strong> ₹${d.prospect.declared_monthly_income} | <strong>CIBIL:</strong> ${(() => { const br = d.agent_runs.filter(a => a.agent_name === 'bureau'); return br.length ? (JSON.parse(br[br.length-1].output_json).cibil_score + ' (bureau)') : (d.prospect.cibil_declared || '-'); })()}</p>
+                        <h4 style="margin-top: 20px;">Agent Runs:</h4>
+                        <div class="agent-status">
+                            ${Object.values(d.agent_runs.reduce((m, a) => { m[a.agent_name] = a; return m; }, {})).map(a => `<div class="agent-card"><div class="agent-name">${a.agent_name}</div><div class="agent-state">${a.status}</div></div>`).join('')}
+                        </div>
+                        ${rec.rm_script ? `<p style="margin-top: 20px; padding: 12px; background: #f1f5f9; border-radius: 6px;"><strong>RM Script:</strong> ${rec.rm_script}</p>` : ''}
+                        ${rec.customer_message ? `<p style="padding: 12px; background: #dcfce7; border-radius: 6px;"><strong>Customer Message:</strong> ${rec.customer_message}</p>` : ''}
+                    `;
+                    document.getElementById('detailContent').innerHTML = html;
+                    document.getElementById('detailModal').classList.add('active');
+                });
+        }
+
+        // ═══════════ 7-STEP RM QUALIFICATION WIZARD ═══════════
+        let wz = {};
+        const WZ_TOTAL = 7;
+
+        function wzOpen() {
+            wz = { step: 1, id: null, loanType: null, secured: false, cibil: null, verifiedIncome: null, foir: null, safeEmi: null };
+            document.getElementById('wizardModal').classList.add('active');
+            wzRender();
+        }
+        function wzProgress() {
+            document.getElementById('wzProgress').innerHTML =
+                Array.from({length: WZ_TOTAL}, (_, i) => `<div class="wz-dot ${i < wz.step ? 'done' : ''}"></div>`).join('');
+        }
+        function wzPrev() { if (wz.step > 1) { wz.step--; wzRender(); } }
+
+        function wzRender() {
+            wzProgress();
+            const labels = ['', 'Step 1 of 7 — Loan Category', 'Step 2 of 7 — KYC Capture (DigiLocker-ready)',
+                'Step 3 of 7 — Instant CIBIL Check', (wz.isBusiness ? 'Step 4 of 7 — Business Financial Assessment (ITR/GSTN-ready)' : 'Step 4 of 7 — Bank Statement Analysis (Perfios/Setu-ready)'),
+                'Step 5 of 7 — Property Legal Analyser', 'Step 6 of 7 — Property Valuation Cross-Check', 'Step 7 of 7 — Final Agentic Assessment'];
+            document.getElementById('wzStepLabel').innerText = labels[wz.step];
+            document.getElementById('wzBack').style.visibility = wz.step === 1 ? 'hidden' : 'visible';
+            const b = document.getElementById('wzBody');
+            const nextBtn = document.getElementById('wzNext');
+            nextBtn.disabled = false; nextBtn.innerText = 'Continue';
+
+            if (wz.step === 1) {
+                b.innerHTML = wzStep1HTML();
+            }
+            else if (wz.step === 2) {
+                b.innerHTML = `
+                    <div class="input-group"><label>Customer Name *</label><input type="text" id="wz_name" value="${wz.name||''}"></div>
+                    <div class="input-group"><label>Mobile *</label><input type="text" id="wz_mobile" value="${wz.mobile||''}"></div>
+                    <div class="input-group"><label>City</label><input type="text" id="wz_city" value="${wz.city||'Jaipur'}"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div class="input-group"><label>PAN *</label><input type="text" id="wz_pan" placeholder="ABCPX1234K" value="${wz.pan||''}"></div>
+                        <div class="input-group"><label>Aadhaar *</label><input type="text" id="wz_aadhaar" placeholder="12 digits" value="${wz.aadhaar||''}"></div>
+                    </div>
+                    <div class="wz-card" style="background:#f8fafc;border:1px dashed #cbd5e1;color:#64748b;">📄 Document upload: <b>DigiLocker / Karza API integration-ready</b> — sandbox phase mein live fetch hoga. Abhi PAN/Aadhaar format + name-match simulation.</div>
+                    <div id="wz_kyc_result"></div>`;
+                nextBtn.innerText = 'Verify KYC & Continue';
+            }
+            else if (wz.step === 3) {
+                b.innerHTML = `<div id="wz_cibil_box" class="wz-card" style="background:#f8fafc;">⏳ Fetching bureau report (CIBIL API integration-ready — sandbox phase live)...</div>`;
+                nextBtn.disabled = true;
+                wzRunBureau();
+            }
+            else if (wz.step === 4 && wz.isBusiness) {
+                b.innerHTML = `
+                    <button class="btn" style="width:100%;margin-bottom:8px;" onclick="wzITRFetch()">📄 Fetch financials via ITR / GSTN (Karza / Setu — integration ready)</button>
+                    <p style="font-size:11px;color:#94a3b8;text-align:center;margin-bottom:14px;">Sandbox phase: auto-pull from ITR & GST returns. Below: manual entry from financials.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div class="input-group"><label>Annual Turnover (Rs.) *</label><input type="number" id="wz_turnover" value="${wz.turnover||''}" placeholder="30000000"></div>
+                        <div class="input-group"><label>Net Profit / PAT (Rs.) *</label><input type="number" id="wz_pat" value="${wz.pat||''}" placeholder="2400000"></div>
+                        <div class="input-group"><label>Depreciation (Rs.)</label><input type="number" id="wz_dep" value="${wz.dep||0}"></div>
+                        <div class="input-group"><label>Interest Paid (Rs./yr)</label><input type="number" id="wz_int" value="${wz.interest||0}"></div>
+                        <div class="input-group"><label>Term Loan Obligations (Rs./yr)</label><input type="number" id="wz_termobl" value="${wz.termObl||0}"></div>
+                        <div class="input-group"><label>Existing WC Limits (Rs.)</label><input type="number" id="wz_existwc" value="${wz.existingWC||0}"></div>
+                        <div class="input-group"><label>Debtor Days</label><input type="number" id="wz_debtor" value="${wz.debtorDays||60}"></div>
+                        <div class="input-group"><label>Creditor Days</label><input type="number" id="wz_creditor" value="${wz.creditorDays||30}"></div>
+                        <div class="input-group"><label>Inventory Days</label><input type="number" id="wz_inv" value="${wz.invDays||45}"></div>
+                    </div>
+                    <div id="wz_biz_result"></div>`;
+                nextBtn.innerText = 'Assess Business Financials';
+            }
+            else if (wz.step === 4) {
+                b.innerHTML = `
+                    <button class="btn" style="width:100%;margin-bottom:8px;" onclick="wzAAFetch()">⚡ Fetch via Account Aggregator (Perfios / Setu — integration ready)</button>
+                    <p style="font-size:11px;color:#94a3b8;text-align:center;margin-bottom:14px;">Sandbox phase: live AA consent flow. Below: manual entry fallback.</p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div class="input-group"><label>Monthly Income *</label><input type="number" id="wz_income" value="${wz.income||''}"></div>
+                        <div class="input-group"><label>Existing EMIs</label><input type="number" id="wz_emi" value="${wz.emi||0}"></div>
+                        <div class="input-group"><label>Age</label><input type="number" id="wz_age" value="${wz.age||''}"></div>
+                    </div>
+                    <div class="input-group"><label>Employment Type</label><select id="wz_emp"><option value="salaried">Salaried</option><option value="self_employed">Self Employed</option><option value="business_owner">Business Owner</option><option value="professional">Professional</option></select></div>
+                    <div id="wz_txn_result"></div>`;
+                nextBtn.innerText = 'Analyze & Continue';
+            }
+            else if (wz.step === 5) {
+                if (!wz.secured) { wz.step = 7; wzRender(); return; }
+                const DOCS = [
+                    ['sale_deed','Sale Deed (Registry)'], ['previous_sale_deed','Previous Chain Documents'],
+                    ['patta','Patta / Allotment Letter'], ['mutation','Mutation (Namantaran)'],
+                    ['approved_map','Approved Map / Site Plan'], ['property_tax_receipt','Property Tax Receipt']
+                ];
+                b.innerHTML = `<p style="font-size:13px;margin-bottom:10px;">For each document: <b>upload the scan</b> (AI classification — OCR integration-ready) or mark as received physically at branch.</p>
+                    ${DOCS.map(([k, label]) => `
+                    <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;font-size:13px;">
+                        <div style="flex:1;font-weight:600;">${label}</div>
+                        <span id="wzdoc_status_${k}" style="font-size:11px;color:#94a3b8;">—</span>
+                        <input type="file" id="wzdoc_file_${k}" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="wzUploadDoc('${k}')">
+                        <button class="btn btn-secondary" style="padding:5px 10px;font-size:11px;" onclick="document.getElementById('wzdoc_file_${k}').click()">📎 Upload</button>
+                        <label style="font-size:11px;white-space:nowrap;"><input type="checkbox" class="wz-doc" value="${k}"> Physical</label>
+                    </div>`).join('')}
+                    <div id="wz_legal_result"></div>`;
+                (wz.uploadedDocs || []).forEach(k => {
+                    const el = document.getElementById('wzdoc_status_' + k);
+                    if (el) { el.innerText = '✓ Uploaded'; el.style.color = '#16a34a'; }
+                });
+                nextBtn.innerText = 'Run Legal Analyser';
+            }
+            else if (wz.step === 6) {
+                b.innerHTML = `
+                    <div class="input-group"><label>Property Area / Locality *</label><input type="text" id="wz_area" placeholder="e.g. Vaishali Nagar" value="${wz.area||''}"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div class="input-group"><label>Carpet Area (sqft) *</label><input type="number" id="wz_sqft" value="${wz.sqft||''}"></div>
+                        <div class="input-group"><label>RM Estimated Value (Rs.) *</label><input type="number" id="wz_val" value="${wz.val||''}"></div>
+                    </div>
+                    <p style="font-size:11px;color:#94a3b8;">Agent cross-verifies against bank's 12-month funding history in this area. External valuation API integration-ready.</p>
+                    <div id="wz_val_result"></div>`;
+                nextBtn.innerText = 'Cross-Verify Valuation';
+            }
+            else if (wz.step === 7) {
+                document.getElementById('wizardModal').classList.remove('active');
+                executePipeline(wz.id, null, true);
+            }
+        }
+
+        const WZ_PRODUCTS = {
+            secured: {
+                property: {
+                    home_loan: { label: '🏠 Home Loan', type: 'home_loan', subs: ['Purchase - Ready Property','Purchase - Under Construction','Self Construction','Plot + Construction','Balance Transfer','Top-Up','Renovation / Extension','NRI Home Loan'] },
+                    lap: { label: '🏢 LAP / Mortgage', type: 'mortgage_loan', subs: ['LAP Term Loan','Dropline Overdraft (DOD)','Lease Rental Discounting','LAP Balance Transfer','LAP Top-Up'] },
+                    wc: { label: '🏭 Working Capital', type: 'mortgage_loan', subs: ['Cash Credit (CC)','Overdraft (OD)','Bank Guarantee (BG)','Letter of Credit (LC)'] }
+                },
+                nonproperty: {
+                    car: { label: '🚗 Car Loan', type: 'auto_loan', subs: ['New Car','Used Car','Refinance'] },
+                    machinery: { label: '⚙️ Machinery / Equipment', type: 'auto_loan', subs: ['New Machinery','Used Machinery','Refinance'] },
+                    gold: { label: '🪙 Gold Loan', type: 'personal_loan', subs: ['Gold Term Loan','Gold Overdraft'] }
+                }
+            },
+            unsecured: {
+                direct: {
+                    personal: { label: '💳 Personal Loan', type: 'personal_loan', subs: ['Fresh PL','PL Balance Transfer','PL Top-Up'] },
+                    business: { label: '💼 Business Loan', type: 'personal_loan', subs: ['Term Business Loan','Professional Loan'] }
+                }
+            }
+        };
+
+        function tile(label, sub, onclick, sel) {
+            return `<div class="wz-tile ${sel ? 'selected' : ''}" onclick="${onclick}"><div class="wz-t">${label}</div>${sub ? '<div class="wz-s">' + sub + '</div>' : ''}</div>`;
+        }
+
+        function wzStep1HTML() {
+            let crumb = [wz.cat, wz.branch === 'direct' ? null : wz.branch, wz.prodKey ? WZ_PRODUCTS[wz.cat][wz.branch][wz.prodKey].label.replace(/^\S+ /, '') : null].filter(Boolean).join(' › ');
+            let h = crumb ? `<p style="font-size:12px;color:#1e3a8a;font-weight:600;margin-bottom:10px;">${crumb} <a href="#" onclick="event.preventDefault();wzResetS1()" style="font-size:11px;">↺ change</a></p>` : '';
+            const grid = x => `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">${x}</div>`;
+            if (!wz.cat) {
+                h += grid(tile('🔒 Secured', 'Backed by collateral', "wzS1('cat','secured')", false) + tile('✋ Unsecured', 'No collateral', "wzS1('cat','unsecured')", false));
+            } else if (!wz.branch) {
+                h += wz.cat === 'unsecured' ? (wz.branch = 'direct', wzStep1HTML())
+                    : grid(tile('🏘️ Property-Backed', 'HL · LAP · WC', "wzS1('branch','property')", false) + tile('📦 Non-Property', 'Car · Machinery · Gold', "wzS1('branch','nonproperty')", false));
+            } else if (!wz.prodKey) {
+                h += grid(Object.entries(WZ_PRODUCTS[wz.cat][wz.branch]).map(([k, p]) => tile(p.label, p.subs.length + ' programs', `wzS1('prod','${k}')`, false)).join(''));
+            } else {
+                const p = WZ_PRODUCTS[wz.cat][wz.branch][wz.prodKey];
+                h += grid(p.subs.map(s => tile(s, null, `wzS1('sub','${s.replace(/'/g, "\\'")}')`, wz.subProduct === s)).join(''));
+                if (wz.subProduct) h += `<div class="input-group" style="margin-top:14px;"><label>Loan Amount Required (Rs.) *</label><input type="number" id="wz_amount_s1" value="${wz.amount || ''}" placeholder="5000000"></div>`;
+            }
+            return h;
+        }
+        function wzS1(k, v) {
+            if (k === 'cat') { wz.cat = v; wz.branch = null; wz.prodKey = null; wz.subProduct = null; }
+            if (k === 'branch') { wz.branch = v; wz.prodKey = null; wz.subProduct = null; }
+            if (k === 'prod') { wz.prodKey = v; wz.subProduct = null; wz.isBusiness = (v === 'wc' || v === 'business'); }
+            if (k === 'sub') { wz.subProduct = v; }
+            const p = wz.prodKey ? WZ_PRODUCTS[wz.cat][wz.branch][wz.prodKey] : null;
+            if (p) { wz.loanType = p.type; wz.secured = (wz.branch === 'property'); }
+            wzRender();
+        }
+        function wzResetS1() { wz.cat = null; wz.branch = null; wz.prodKey = null; wz.subProduct = null; wzRender(); }
+
+        async function wzRunBureau() {
+            const box = document.getElementById('wz_cibil_box');
+            const nextBtn = document.getElementById('wzNext');
+            try {
+                const bureau = await fetch('/api/agents.php?action=run_bureau&prospect_id=' + wz.id).then(r => r.json());
+                const o = bureau.output;
+                wz.cibil = o.cibil_score;
+                let cls, headline, suggestion = '';
+                if (o.cibil_score >= 750) {
+                    cls = 'wz-green'; headline = '🟢 CIBIL ' + o.cibil_score + ' — Excellent';
+                    suggestion = 'Strong bureau profile. Confidence high across all IDBI programs.';
+                } else if (o.cibil_score >= 700) {
+                    cls = 'wz-amber'; headline = '🟡 CIBIL ' + o.cibil_score + ' — Acceptable';
+                    suggestion = 'Meets most program thresholds. If final eligibility falls short, a co-applicant with CIBIL 750+ can strengthen the loan structure.';
+                } else {
+                    cls = 'wz-red'; headline = '🔴 CIBIL ' + o.cibil_score + ' — Below Threshold';
+                    suggestion = '<b>Suggestion:</b> Structure the case with a co-applicant (spouse/parent) having CIBIL 750+. Several IDBI programs allow co-applicant income and bureau strength to carry the case.';
+                }
+                box.className = 'wz-card ' + cls;
+                box.innerHTML = headline +
+                    '<br>Active loans: ' + o.active_loans_count + ' · Running EMI: Rs.' + (o.total_active_emi||0).toLocaleString('en-IN') +
+                    ' · Enquiries (6m): ' + o.recent_enquiries_6m +
+                    (o.overdue_amount > 0 ? ' · ⚠️ Overdue Rs.' + o.overdue_amount.toLocaleString('en-IN') : ' · No overdue') +
+                    '<br><br>' + suggestion +
+                    '<br><span style="font-size:11px;color:#94a3b8;">CIBIL API integration-ready — live pull in sandbox phase via bank portal API call.</span>';
+                nextBtn.disabled = false;
+            } catch (e) {
+                box.className = 'wz-card wz-red';
+                box.innerText = 'Bureau fetch failed: ' + e.message;
+                nextBtn.disabled = false;
+            }
+        }
+
+        async function wzUploadDoc(docType) {
+            const input = document.getElementById('wzdoc_file_' + docType);
+            const statusEl = document.getElementById('wzdoc_status_' + docType);
+            if (!input.files.length) return;
+            statusEl.innerText = 'Uploading...'; statusEl.style.color = '#1e3a8a';
+            const fd = new FormData();
+            fd.append('prospect_id', wz.id);
+            fd.append('document_type', docType);
+            fd.append('file', input.files[0]);
+            try {
+                const res = await fetch('/api/upload_document.php', { method: 'POST', body: fd }).then(r => r.json());
+                if (res.success) {
+                    statusEl.innerText = '✓ Uploaded'; statusEl.style.color = '#16a34a';
+                    wz.uploadedDocs = wz.uploadedDocs || [];
+                    if (!wz.uploadedDocs.includes(docType)) wz.uploadedDocs.push(docType);
+                    const cb = document.querySelector('.wz-doc[value="' + docType + '"]');
+                    if (cb) { cb.checked = false; cb.disabled = true; }
+                } else {
+                    statusEl.innerText = '✗ ' + (res.message || 'failed'); statusEl.style.color = '#ef4444';
+                }
+            } catch (e) {
+                statusEl.innerText = '✗ upload failed'; statusEl.style.color = '#ef4444';
+            }
+        }
+
+        async function wzITRFetch() {
+            alert('ITR / GSTN pull (Karza / Setu) — integration-ready.\n\nIn the sandbox phase this will auto-fetch turnover, PAT, depreciation and interest from ITR & GST returns. For this prototype, please enter values from the financials manually.');
+        }
+
+        async function wzAAFetch() {
+            alert('Account Aggregator flow (Perfios / Setu) — integration-ready.\n\nIn the sandbox phase this will trigger a live AA consent journey and auto-download 12-month statements. For this prototype, please use the manual fields below.');
+        }
+
+        async function wzNext() {
+            const nextBtn = document.getElementById('wzNext');
+            if (wz.step === 1) {
+                if (!wz.subProduct) { alert('Select product and sub-product'); return; }
+                const amtEl = document.getElementById('wz_amount_s1');
+                wz.amount = amtEl ? amtEl.value : wz.amount;
+                if (!wz.amount || parseFloat(wz.amount) <= 0) { alert('Enter loan amount required'); return; }
+                wz.step = 2; wzRender();
+            }
+            else if (wz.step === 2) {
+                wz.name = document.getElementById('wz_name').value.trim();
+                wz.mobile = document.getElementById('wz_mobile').value.trim();
+                wz.city = document.getElementById('wz_city').value.trim();
+                wz.pan = document.getElementById('wz_pan').value.trim();
+                wz.aadhaar = document.getElementById('wz_aadhaar').value.trim();
+                if (!wz.name || !wz.mobile || !wz.pan || !wz.aadhaar) { alert('Name, mobile, PAN and Aadhaar are required'); return; }
+                nextBtn.disabled = true; nextBtn.innerText = 'Verifying...';
+                if (!wz.id) {
+                    const created = await fetch('/api/prospect_intake.php?action=create', { method: 'POST', headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({ full_name: wz.name, mobile: wz.mobile, city: wz.city, loan_type: wz.loanType, sub_product: wz.subProduct, product_path: [wz.cat, wz.branch, wz.prodKey, wz.subProduct].join(' > '), loan_amount_required: parseFloat(wz.amount), consent: true, lead_source: 'rm_wizard' }) }).then(r => r.json());
+                    if (!created.success) { alert(created.message); nextBtn.disabled = false; return; }
+                    wz.id = created.prospect_id;
+                }
+                const kyc = await fetch('/api/agents.php?action=run_kyc&prospect_id=' + wz.id + '&pan=' + encodeURIComponent(wz.pan) + '&aadhaar=' + encodeURIComponent(wz.aadhaar)).then(r => r.json());
+                const o = kyc.output;
+                document.getElementById('wz_kyc_result').innerHTML = `<div class="wz-card ${o.kyc_verified ? 'wz-green' : 'wz-red'}">
+                    ${o.kyc_verified ? '✅ KYC Verified' : '❌ KYC Failed'} — ${o.pan_masked || 'invalid PAN'} · ${o.aadhaar_masked || 'invalid Aadhaar'} · Name match ${o.name_match_score}%</div>`;
+                nextBtn.disabled = false; nextBtn.innerText = 'Continue';
+                if (o.kyc_verified) { setTimeout(() => { wz.step = 3; wzRender(); }, 900); }
+            }
+            else if (wz.step === 3) { wz.step = 4; wzRender(); }
+            else if (wz.step === 4 && wz.isBusiness) {
+                wz.turnover = document.getElementById('wz_turnover').value;
+                wz.pat = document.getElementById('wz_pat').value;
+                wz.dep = document.getElementById('wz_dep').value || 0;
+                wz.interest = document.getElementById('wz_int').value || 0;
+                wz.termObl = document.getElementById('wz_termobl').value || 0;
+                wz.existingWC = document.getElementById('wz_existwc').value || 0;
+                wz.debtorDays = document.getElementById('wz_debtor').value || 60;
+                wz.creditorDays = document.getElementById('wz_creditor').value || 30;
+                wz.invDays = document.getElementById('wz_inv').value || 45;
+                if (!wz.turnover || !wz.pat) { alert('Annual turnover and PAT are required'); return; }
+                nextBtn.disabled = true; nextBtn.innerText = 'Assessing...';
+                const monthlyEq = Math.round((parseFloat(wz.pat) + parseFloat(wz.dep)) / 12);
+                const upd = await fetch('/api/prospect_intake.php?action=update', { method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ prospect_id: wz.id, declared_monthly_income: monthlyEq, employment_type: 'business_owner',
+                        existing_emi_declared: Math.round(parseFloat(wz.termObl) / 12), property_ownership: wz.secured ? 'yes' : 'no' }) }).then(r => r.json());
+                if (!upd.success) { alert('Failed to save: ' + (upd.message || 'unknown')); nextBtn.disabled = false; nextBtn.innerText = 'Assess Business Financials'; return; }
+                const biz = await fetch('/api/agents.php?action=run_business_financials&prospect_id=' + wz.id +
+                    '&turnover=' + wz.turnover + '&pat=' + wz.pat + '&depreciation=' + wz.dep + '&interest_paid=' + wz.interest +
+                    '&term_obligations=' + wz.termObl + '&existing_wc=' + wz.existingWC +
+                    '&debtor_days=' + wz.debtorDays + '&creditor_days=' + wz.creditorDays + '&inventory_days=' + wz.invDays).then(r => r.json());
+                const o = biz.output;
+                wz.verifiedIncome = o.monthly_income_equivalent;
+                const cls = o.dscr_band === 'green' ? 'wz-green' : (o.dscr_band === 'amber' ? 'wz-amber' : 'wz-red');
+                document.getElementById('wz_biz_result').innerHTML = `<div class="wz-card ${cls}">
+                    DSCR <b>${o.dscr}</b> (${o.dscr_band.toUpperCase()}) · Operating cycle ${o.operating_cycle_days} days (${o.cycle_flag})<br>
+                    Nayak assessment: WC requirement Rs.${(o.nayak_wc_requirement_25pct||0).toLocaleString('en-IN')} · Bank finance cap (20%) Rs.${(o.bank_finance_eligible_20pct||0).toLocaleString('en-IN')}<br>
+                    <b>Net new limit eligible: Rs.${(o.net_new_limit_eligible||0).toLocaleString('en-IN')}</b>
+                    ${o.risk_flags.length ? '<br>⚠️ ' + o.risk_flags.join('<br>⚠️ ') : ''}</div>`;
+                const txn = await fetch('/api/agents.php?action=run_transaction&prospect_id=' + wz.id + '&verified_income=' + wz.verifiedIncome).then(r => r.json());
+                wz.foir = txn.foir; wz.safeEmi = txn.safe_emi;
+                nextBtn.disabled = false;
+                setTimeout(() => { wz.step = 5; wzRender(); }, 2200);
+            }
+            else if (wz.step === 4) {
+                wz.income = document.getElementById('wz_income').value;
+                wz.emi = document.getElementById('wz_emi').value || 0;
+                wz.age = document.getElementById('wz_age').value;
+                if (!wz.income) { alert('Monthly income is required'); return; }
+                nextBtn.disabled = true; nextBtn.innerText = 'Analyzing...';
+                const upd = await fetch('/api/prospect_intake.php?action=update', { method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({ prospect_id: wz.id, loan_amount_required: parseFloat(wz.amount), declared_monthly_income: parseFloat(wz.income),
+                        existing_emi_declared: parseFloat(wz.emi), employment_type: document.getElementById('wz_emp').value, age: parseInt(wz.age) || null,
+                        property_ownership: wz.secured ? 'yes' : 'no' }) }).then(r => r.json());
+                if (!upd.success) { alert('Failed to save financial details: ' + (upd.message || 'unknown')); nextBtn.disabled = false; nextBtn.innerText = 'Analyze & Continue'; return; }
+                const inc = await fetch('/api/agents.php?action=run_income&prospect_id=' + wz.id).then(r => r.json());
+                wz.verifiedIncome = inc.verified_income;
+                const txn = await fetch('/api/agents.php?action=run_transaction&prospect_id=' + wz.id + '&verified_income=' + wz.verifiedIncome).then(r => r.json());
+                wz.foir = txn.foir; wz.safeEmi = txn.safe_emi;
+                const cls = txn.foir <= 45 ? 'wz-green' : (txn.foir <= 55 ? 'wz-amber' : 'wz-red');
+                document.getElementById('wz_txn_result').innerHTML = `<div class="wz-card ${cls}">
+                    Verified income Rs.${(wz.verifiedIncome||0).toLocaleString('en-IN')}/mo · FOIR ${txn.foir}% · Safe EMI capacity Rs.${(wz.safeEmi||0).toLocaleString('en-IN')}</div>`;
+                nextBtn.disabled = false;
+                setTimeout(() => { wz.step = 5; wzRender(); }, 1100);
+            }
+            else if (wz.step === 5) {
+                const docs = Array.from(document.querySelectorAll('.wz-doc:checked')).map(c => c.value).join(',');
+                nextBtn.disabled = true;
+                const legal = await fetch('/api/legal_valuation.php?action=run_legal&prospect_id=' + wz.id + '&received_docs=' + encodeURIComponent(docs)).then(r => r.json());
+                const o = legal.output;
+                const cls = o.legal_readiness_score >= 80 ? 'wz-green' : (o.legal_readiness_score >= 50 ? 'wz-amber' : 'wz-red');
+                document.getElementById('wz_legal_result').innerHTML = `<div class="wz-card ${cls}">Legal readiness ${o.legal_readiness_score}/100 · Title chain: ${o.title_chain_status}<br>${o.recommendation}</div>`;
+                nextBtn.disabled = false;
+                setTimeout(() => { wz.step = 6; wzRender(); }, 1400);
+            }
+            else if (wz.step === 6) {
+                if (wz.valReady) { wz.step = 7; wzRender(); return; }
+                wz.area = document.getElementById('wz_area').value.trim();
+                wz.sqft = document.getElementById('wz_sqft').value;
+                wz.val = document.getElementById('wz_val').value;
+                if (!wz.area || !wz.sqft || !wz.val) { alert('Area, sqft and RM value are required'); return; }
+                nextBtn.disabled = true;
+                const val = await fetch('/api/legal_valuation.php?action=run_valuation&prospect_id=' + wz.id + '&rm_value=' + wz.val + '&area=' + encodeURIComponent(wz.area) + '&sqft=' + wz.sqft).then(r => r.json());
+                const o = val.output;
+                const map = { green: ['wz-green','🟢 GREEN — within 10% of funding history'], warning: ['wz-amber','🟡 WARNING — external valuation required'], out_of_scope: ['wz-red','🔴 OUT OF SCOPE — external valuation + credit recommendation mandatory'], no_comparables: ['wz-amber','🟡 No funding history in area — external valuation required'] };
+                const m = map[o.signal] || ['wz-amber', o.signal];
+                document.getElementById('wz_val_result').innerHTML = `<div class="wz-card ${m[0]}">${m[1]}<br>${o.comparables_found ? 'Bank funded ' + o.comparables_found + ' properties here · 12-mo avg Rs.' + (o.area_avg_per_sqft_12m||0).toLocaleString('en-IN') + '/sqft · your deviation ' + o.deviation_pct + '%' : ''}</div>`;
+                nextBtn.disabled = false; nextBtn.innerText = 'Run Final Assessment';
+                wz.valReady = true;
+            }
+        }
+
+        loadProspects();
+        setInterval(loadProspects, 30000);
+    </script>
+</body>
+</html>
